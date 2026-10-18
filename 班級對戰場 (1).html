@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>班級對戰場</title>
+<style>
+:root{--bg:#f5f6fa;--card:#fff;--text:#1d2433;--sub:#667085;--pri:#7a2fe0;--line:#d5d9e6;--win:#16a34a;--lose:#dc2626;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10131c;--card:#1a1f2d;--text:#eef0f6;--sub:#9aa3b8;--pri:#a67dff;--line:#2b3246;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10131c;--card:#1a1f2d;--text:#eef0f6;--sub:#9aa3b8;--pri:#a67dff;--line:#2b3246;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;transition:background .3s,color .3s;user-select:none;-webkit-user-select:none}
+.wrap{max-width:480px;margin:0 auto;padding:64px 18px 30px}
+.top{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;z-index:5;display:flex;gap:8px}
+/* Roblox 風 3D 按鈕 */
+.btn,.ctl button,.games button,.grid button,.top button{--c1:#b86cff;--c2:#7a2fe0;--c3:#3b1a82;border:3px solid #0b0b14;border-radius:14px;color:#fff;font-weight:900;cursor:pointer;
+text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 3px 0 rgba(0,0,0,.45);
+background:linear-gradient(var(--c1),var(--c2));box-shadow:0 6px 0 var(--c3),0 9px 8px rgba(0,0,0,.35),inset 0 3px 0 rgba(255,255,255,.4);transition:transform .06s,box-shadow .06s}
+.btn:active:not(:disabled),.ctl button:active:not(:disabled),.games button:active,.grid button:active,.top button:active{transform:translateY(5px);box-shadow:0 1px 0 var(--c3),0 2px 3px rgba(0,0,0,.3),inset 0 3px 0 rgba(255,255,255,.4)}
+button:disabled{opacity:.5;filter:grayscale(.7)}
+.grid button,.top button{--c1:#4db8ff;--c2:#1f78d6;--c3:#123f7a}
+button.g{--c1:#7a88a8;--c2:#4a5673;--c3:#262d40}
+button.alt{--c1:#4db8ff;--c2:#1f78d6;--c3:#123f7a}
+button.gd,.grid button.sel,.grid button.last{--c1:#ffd54a;--c2:#e0a200;--c3:#7a5600}
+button.red{--c1:#ff7b7b;--c2:#d62828;--c3:#6b1010}
+button.grn{--c1:#5be37d;--c2:#1fa84a;--c3:#0f5a26}
+.top button{padding:7px 12px;font-size:16px}
+.screen{display:none;animation:in .3s}.screen.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+h1{font-size:26px;margin:0 0 6px}h2{font-size:21px;margin:0 0 6px}
+p.s{color:var(--sub);margin:0 0 16px}
+.card{background:var(--card);border:3px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 5px 0 var(--line)}
+input[type=number]{width:100%;font-size:28px;text-align:center;padding:14px;border-radius:14px;border:3px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:14px;user-select:text}
+input:focus{outline:none;border-color:var(--pri)}
+.btn{width:100%;padding:14px;font-size:18px;margin:8px 0 6px;display:block}
+.err{color:var(--lose);min-height:20px;font-size:14px;margin-bottom:4px;text-align:center}
+.av{width:72px;height:72px;border-radius:50%;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:28px;overflow:hidden;flex:none;border:3px solid #0b0b14}
+.av img{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.pick{display:flex;flex-direction:column;align-items:center;gap:8px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px}
+.grid button{aspect-ratio:1;font-size:18px}
+.row{display:flex;gap:10px}.row .btn{margin-top:0}
+.vs{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.vs .p{text-align:center;font-size:13px;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:6px}
+.vs b{font-size:24px;color:var(--pri)}
+.games{display:grid;gap:14px}
+.games button{display:flex;align-items:center;gap:14px;text-align:left;padding:14px;font-size:19px}
+.games .e{font-size:32px}.games small{display:block;color:#fff;opacity:.85;font-size:13px;margin-top:2px;font-weight:700}
+.board{margin:20px 0 10px;font-size:14px;color:var(--sub)}
+.board .tot{display:flex;justify-content:space-around;text-align:center;margin-bottom:10px}
+.board .tot b{display:block;font-size:22px;color:var(--text)}
+.board .ln{display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid var(--line)}
+.stage{position:relative;background:var(--bg);border:3px solid #0b0b14;border-radius:16px;overflow:hidden;margin-bottom:14px}
+.lane{position:relative;height:74px;border-bottom:2px dashed var(--line)}
+.lane:last-child{border:0}
+.lane .av{position:absolute;left:6px;top:11px;transition:left .1s linear}
+.lane::after{content:"🏁";position:absolute;right:6px;top:20px;font-size:28px}
+.duel{display:flex;justify-content:space-between;align-items:flex-end;height:170px;padding:16px 14px}
+.fi{width:38%;display:flex;flex-direction:column;align-items:center;gap:8px}
+.fi .av{width:84px;height:84px;transition:transform .3s,filter .5s,opacity .5s}
+.hp{width:100%;height:12px;border-radius:8px;background:var(--line);overflow:hidden}
+.hp i{display:block;height:100%;width:100%;background:var(--win);transition:width .2s,background .2s}
+.av.down{transform:rotate(80deg) translateY(20px);filter:grayscale(1);opacity:.45}
+.av.hit{animation:shake .25s 2}
+.av.guard{box-shadow:0 0 0 4px #38bdf8}
+@keyframes shake{50%{transform:translateX(-9px)}}
+.light{display:flex;justify-content:center;gap:10px;padding:12px;background:#222}
+.light i{width:34px;height:34px;border-radius:50%;background:#444;display:block}
+.light i.r.on{background:#ef4444;box-shadow:0 0 18px #ef4444}.light i.g.on{background:#22c55e;box-shadow:0 0 18px #22c55e}
+.say{text-align:center;font-size:18px;font-weight:700;min-height:28px;margin-bottom:8px}
+.ctl{display:flex;flex-wrap:wrap;gap:12px 10px;margin-bottom:14px;touch-action:none}
+.ctl button{flex:1 1 22%;padding:16px 6px;font-size:19px}
+.ctl .br{flex-basis:100%;height:0}
+.res{text-align:center;font-size:30px;font-weight:800;margin:6px 0 10px}
+.res.w{color:var(--win)}.res.l{color:var(--lose)}
+</style>
+</head>
+<body>
+<div class="top"><button id="snd">🔊</button><button id="theme">🌙</button></div>
+<div class="wrap">
+
+<section class="screen on" id="s1"><div class="card">
+<h1>👋 歡迎來到對戰場</h1><p class="s">請輸入你的座號</p>
+<input type="number" id="seat" min="1" inputmode="numeric" placeholder="座號">
+<div class="err" id="e1"></div><button class="btn" id="b1">下一步</button></div></section>
+
+<section class="screen" id="s2"><div class="card">
+<h2>班上有幾個人？</h2><p class="s">輸入全班總人數</p>
+<input type="number" id="total" min="2" max="60" inputmode="numeric" placeholder="人數">
+<div class="err" id="e2"></div><button class="btn" id="b2">下一步</button></div></section>
+
+<section class="screen" id="s3"><div class="card pick">
+<h2>你的頭像</h2><p class="s" style="margin:0">上傳照片，沒有的話就用號碼</p>
+<div class="av" id="myav" style="width:120px;height:120px;font-size:46px"></div>
+<input type="file" id="file" accept="image/*" hidden>
+<button class="btn alt" id="up">📷 上傳照片</button>
+<button class="btn g" id="rmp">移除照片</button>
+<button class="btn gd" id="b3">儲存並開始 ⚔️</button></div></section>
+
+<section class="screen" id="s4"><div class="card">
+<h2>選擇對手號碼</h2><p class="s" id="me4"></p>
+<div class="grid" id="grid"></div>
+<button class="btn grn" id="rnd">🎲 隨機對手</button>
+<div class="row" style="margin-top:8px"><button class="btn g" id="set1">⚙️ 重新設定</button><button class="btn g" id="set3">🖼️ 換頭像</button></div></div></section>
+
+<section class="screen" id="s5">
+<div class="vs" id="vs5"></div>
+<div class="games">
+<button data-g="race" class="gd"><span class="e">🏎️</span><span>賽車賽跑<small>左右轉向、氮氣、抽道具</small></span></button>
+<button data-g="knife" class="red"><span class="e">🔪</span><span>拿刀 PK<small>按砍擊、防禦打倒對方</small></span></button>
+<button data-g="light" class="grn"><span class="e">🚦</span><span>紅綠燈<small>綠燈按住前進，紅燈要放手</small></span></button>
+<button data-g="mm2"><span class="e">🕵️</span><span>殺手模式<small>警長、殺手、平民，5 人對戰</small></span></button>
+</div>
+<div class="board" id="board"></div>
+<button class="btn g" id="back4">← 換對手</button></section>
+
+<section class="screen" id="s6">
+<div class="vs" id="vs6"></div>
+<div class="say" id="say"></div>
+<div class="stage" id="stage"></div>
+<div class="ctl" id="ctl"></div>
+<div class="res" id="res"></div>
+<div id="after" style="display:none">
+<button class="btn gd" id="again">再玩一次</button>
+<button class="btn g" id="chg">換遊戲</button>
+<button class="btn g" id="chop">換對手</button></div>
+<button class="btn g" id="quit">離開遊戲</button></section>
+
+<section class="screen" id="s7"><div class="card">
+<h2>🕵️ 殺手模式</h2><p class="s">你自動參加，再選 4 位同學，共 5 人。身分（殺手、警長、平民）隨機分配，機率相同，其他人都是機器人。</p>
+<div class="grid" id="grid7"></div>
+<div class="say" id="c7"></div>
+<button class="btn gd" id="go7">開始遊戲</button>
+<div class="row" style="margin-top:8px"><button class="btn grn" id="r7">🎲 隨機選</button><button class="btn g" id="x7">← 返回</button></div></div></section>
+
+</div>
+<script>
+const $=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms)),rnd=(a,b)=>a+Math.random()*(b-a);
+const K='classBattle1';
+const mk=()=>({seat:0,total:0,photo:null,opp:0,theme:null,sound:true,squad:[],st:{w:0,l:0,s:0,b:0,g:{race:[0,0],knife:[0,0],light:[0,0],mm2:[0,0]}}});
+let S=mk();
+try{const o=JSON.parse(localStorage.getItem(K)||'null');if(o){S=Object.assign(mk(),o);S.st=Object.assign(mk().st,o.st);S.st.g=Object.assign(mk().st.g,(o.st||{}).g)}}catch(e){}
+function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
+const NAME={race:'🏎️ 賽車',knife:'🔪 拿刀',light:'🚦 紅綠燈',mm2:'🕵️ 殺手模式'};
+let game='',run=0,cleanup=null;
+
+function show(id){document.querySelectorAll('.screen').forEach(e=>e.classList.remove('on'));$(id).classList.add('on');scrollTo(0,0)}
+const av=(n,p)=>`<div class="av">${p?`<img src="${p}" alt="">`:n}</div>`;
+const vsHTML=()=>`<div class="p">${av(S.seat,S.photo)}你（${S.seat}號）</div><b>VS</b><div class="p">${av(S.opp)}${S.opp}號</div>`;
+
+let ac;function beep(f=440,d=.12,t='sine'){if(!S.sound)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.value=.12;o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.stop(ac.currentTime+d)}catch(e){}}
+const jingle=w=>(w?[523,659,784,1047]:[392,330,262,196]).forEach((f,i)=>setTimeout(()=>beep(f,.2,w?'triangle':'sawtooth'),i*140));
+function setSnd(){$('snd').textContent=S.sound?'🔊':'🔇'}
+$('snd').onclick=()=>{S.sound=!S.sound;setSnd();save();beep()};setSnd();
+function setTheme(t){document.documentElement.dataset.theme=t;$('theme').textContent=t==='dark'?'☀️':'🌙'}
+setTheme(S.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+$('theme').onclick=()=>{S.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';setTheme(S.theme);save()};
+
+$('seat').value=S.seat||'';$('total').value=S.total||'';
+$('b1').onclick=()=>{const v=+$('seat').value;if(!Number.isInteger(v)||v<1){$('e1').textContent='請輸入正確的座號';return}S.seat=v;$('e1').textContent='';show('s2')};
+$('b2').onclick=()=>{const v=+$('total').value;if(!Number.isInteger(v)||v<2||v>60){$('e2').textContent='請輸入 2～60 的人數';return}
+ if(v<S.seat){$('e2').textContent=`人數不能比你的座號（${S.seat}）少`;return}S.total=v;$('e2').textContent='';save();toS3()};
+function myav(){$('myav').innerHTML=S.photo?`<img src="${S.photo}">`:(S.seat||'?')}
+function toS3(){myav();show('s3')}
+$('up').onclick=()=>$('file').click();
+$('rmp').onclick=()=>{S.photo=null;myav();save()};
+$('file').onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.onload=()=>{
+ const c=document.createElement('canvas'),z=200;c.width=c.height=z;const m=Math.min(img.width,img.height);
+ c.getContext('2d').drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,z,z);S.photo=c.toDataURL('image/jpeg',.8);save();myav();URL.revokeObjectURL(img.src)};img.src=URL.createObjectURL(f)};
+$('b3').onclick=()=>{save();toS4()};
+function toS4(){$('me4').textContent=`你是 ${S.seat} 號，點一位同學挑戰（金色＝上次對手）`;const g=$('grid');g.innerHTML='';
+ for(let i=1;i<=S.total;i++){if(i===S.seat)continue;const b=document.createElement('button');b.textContent=i;if(i===S.opp)b.className='last';b.onclick=()=>pickOpp(i);g.appendChild(b)}show('s4')}
+function pickOpp(i){S.opp=i;save();toS5()}
+$('rnd').onclick=()=>{let i;do{i=1+Math.floor(Math.random()*S.total)}while(i===S.seat);pickOpp(i)};
+$('set1').onclick=()=>show('s1');$('set3').onclick=toS3;
+function toS5(){$('vs5').innerHTML=vsHTML();board();show('s5')}
+$('back4').onclick=toS4;$('chg').onclick=toS5;$('chop').onclick=toS4;$('again').onclick=()=>play(game);
+$('quit').onclick=()=>{stop();toS5()};
+function board(){const t=S.st;$('board').innerHTML=`<div class="tot"><div><b>${t.w}</b>勝</div><div><b>${t.l}</b>敗</div><div><b>${t.s}</b>連勝</div><div><b>${t.b}</b>最高連勝</div></div>`+
+ Object.keys(NAME).map(k=>`<div class="ln"><span>${NAME[k]}</span><span>${t.g[k][0]} 勝 ${t.g[k][1]} 敗</span></div>`).join('')+`<button class="btn g" id="rst" style="padding:8px;font-size:14px;margin-top:12px">清除戰績</button>`;
+ $('rst').onclick=()=>{if(confirm('確定清除戰績？')){S.st=mk().st;save();board()}}}
+document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>b.dataset.g==='mm2'?toS7():play(b.dataset.g));
+
+/* 殺手模式選人 */
+let sel=new Set();
+function cnt(){$('c7').textContent=`已選 ${sel.size} / 4`;$('go7').disabled=sel.size<4}
+function toS7(){if(S.total<5){alert('班上至少要 5 人才能玩殺手模式');return}
+ sel=new Set(S.squad.filter(n=>n<=S.total&&n!==S.seat));const g=$('grid7');g.innerHTML='';
+ for(let i=1;i<=S.total;i++){if(i===S.seat)continue;const b=document.createElement('button');b.textContent=i;if(sel.has(i))b.classList.add('sel');
+  b.onclick=()=>{if(sel.has(i)){sel.delete(i);b.classList.remove('sel')}else if(sel.size<4){sel.add(i);b.classList.add('sel')}cnt()};g.appendChild(b)}cnt();show('s7')}
+$('go7').onclick=()=>{S.squad=[...sel];save();play('mm2')};
+$('x7').onclick=toS5;
+$('r7').onclick=()=>{const a=[];for(let i=1;i<=S.total;i++)if(i!==S.seat)a.push(i);a.sort(()=>Math.random()-.5);S.squad=a.slice(0,4);toS7()};
+
+function stop(){run++;if(cleanup){cleanup();cleanup=null}}
+function finish(win){stop();const t=S.st;win?(t.w++,t.s++,t.b=Math.max(t.b,t.s)):(t.l++,t.s=0);t.g[game][win?0:1]++;save();jingle(win);
+ $('ctl').innerHTML='';$('say').textContent='';$('res').textContent=win?`🎉 你贏了！${t.s>1?t.s+' 連勝':''}`:'😢 你輸了…';$('res').className='res '+(win?'w':'l');$('after').style.display='block';$('quit').style.display='none'}
+const setCtl=h=>$('ctl').innerHTML=h;
+async function countdown(id){for(const n of ['3','2','1']){$('say').textContent=n;beep(500,.1);await sleep(700);if(id!==run)return false}$('say').textContent='GO！';beep(900,.25);return true}
+const noCtx=()=>0;
+function play(g){
+ stop();game=g;const id=run;show('s6');$('vs6').innerHTML=g==='mm2'?'':vsHTML();$('res').textContent='';$('after').style.display='none';$('quit').style.display='block';$('say').textContent='';setCtl('');
+ ({race,knife,light,mm2})[g](id);
+}
+
+/* 🏎️ 賽車 */
+function race(id){
+ const st=$('stage');st.innerHTML='<canvas id="cv" width="320" height="400" style="width:100%;display:block"></canvas>';
+ const c=$('cv').getContext('2d'),LEN=1500,SC=3,PY=320,LX=[.17,.5,.83];
+ const P={d:0,x:.5,v:0,slip:0,sh:0,nit:0,nc:2,nt:0,item:null},O={d:0,x:.5,v:0,slip:0,sh:0,item:null,it:0,ln:1,lt:0,pace:rnd(.82,.95)};
+ const KY={l:0,r:0,u:0};let shells=[],boxes=[],last=0,raf,go=false,over=false;
+ for(let d=200;d<LEN-100;d+=200)boxes.push({d,x:LX[Math.floor(Math.random()*3)],pm:0,po:0});
+ const IT=['shell','shield','robot'],E={shell:'🐢',shield:'🛡️',robot:'🤖'},pick=()=>IT[Math.floor(Math.random()*3)];
+ setCtl(`<button id="bl">◀</button><button id="bu" class="gd">▲ 油門</button><button id="brr">▶</button><i class="br"></i><button id="bn" class="red"></button><button id="bi" class="grn"></button>`);
+ const ui=()=>{$('bn').textContent=`🔥 氮氣 ×${P.nc}`;$('bi').textContent=P.item?E[P.item]+' 使用':'🎁 沒道具';$('bi').disabled=!P.item};ui();
+ const hold=(b,k)=>$(b).addEventListener('pointerdown',e=>{e.preventDefault();KY[k]=1});
+ hold('bl','l');hold('bu','u');hold('brr','r');
+ const rel=()=>{KY.l=KY.r=KY.u=0};addEventListener('pointerup',rel);addEventListener('pointercancel',rel);
+ const hitP=()=>{if(P.sh>0){P.sh=0;$('say').textContent='🛡️ 防禦罩擋住了！';beep(700,.2)}else{P.slip=1.8;P.v*=.3;$('say').textContent='💫 你滑倒了！';beep(150,.3,'sawtooth')}};
+ const hitO=()=>{if(O.sh>0){O.sh=0;$('say').textContent='對手的防禦罩擋住了！'}else{O.slip=1.8;O.v*=.3;$('say').textContent='💫 對手滑倒了！';beep(250,.2)}};
+ const nitro=()=>{if(!go||P.nc<1||P.nit>0)return;P.nc--;P.nit=1.6;beep(500,.3,'sawtooth');ui()};
+ const useIt=()=>{if(!go||!P.item||P.slip>0)return;const t=P.item;P.item=null;
+  if(t==='shell'){shells.push({d:P.d-6,x:P.x,o:'p'});$('say').textContent='🐢 放下烏龜殼！'}
+  else if(t==='shield'){P.sh=6;$('say').textContent='🛡️ 防禦罩 6 秒'}
+  else hitO();beep(400,.1);ui()};
+ $('bn').onpointerdown=e=>{e.preventDefault();nitro()};$('bi').onpointerdown=e=>{e.preventDefault();useIt()};
+ const MP={ArrowLeft:'l',ArrowRight:'r',ArrowUp:'u'};
+ const kd=e=>{const m=MP[e.code];if(m){e.preventDefault();KY[m]=1}if(e.code==='Space'){e.preventDefault();nitro()}if(e.code==='Enter')useIt()},ku=e=>{const m=MP[e.code];if(m)KY[m]=0};
+ addEventListener('keydown',kd);addEventListener('keyup',ku);
+ const X=x=>40+x*240,Y=d=>PY-(d-P.d)*SC;
+ const car=(o,e,y)=>{c.save();c.translate(X(o.x),y);if(o.slip>0)c.rotate(o.slip*12);c.font='30px serif';c.textAlign='center';c.fillText(e,0,10);if(o.sh>0){c.strokeStyle='#38bdf8';c.lineWidth=3;c.beginPath();c.arc(0,0,24,0,7);c.stroke()}c.restore()};
+ const draw=()=>{c.fillStyle='#3a8f4f';c.fillRect(0,0,320,400);c.fillStyle='#3d4458';c.fillRect(40,0,240,400);
+  c.strokeStyle='#ffffffaa';c.lineWidth=3;c.setLineDash([16,14]);c.lineDashOffset=-((P.d*SC)%30);[120,200].forEach(x=>{c.beginPath();c.moveTo(x,0);c.lineTo(x,400);c.stroke()});c.setLineDash([]);
+  const fy=Y(LEN);c.fillStyle='#fff';c.fillRect(40,fy-5,240,10);c.textAlign='center';c.font='22px serif';c.fillText('🏁',160,fy-10);
+  c.font='26px serif';boxes.forEach(b=>{const y=Y(b.d);if(!b.pm&&y>-20&&y<420)c.fillText('🎁',X(b.x),y+9)});
+  shells.forEach(s=>{const y=Y(s.d);if(!s.u&&y>-20&&y<420)c.fillText('🐢',X(s.x),y+9)});
+  const oy=Y(O.d);if(oy<-10){c.font='bold 13px sans-serif';c.fillStyle='#fff';c.fillText(`▲ 對手 ${S.opp}號`,X(O.x),16)}else if(oy>410){c.font='bold 13px sans-serif';c.fillStyle='#fff';c.fillText('▼ 對手在後面',X(O.x),392)}else car(O,'🚙',oy);
+  car(P,'🏎️',PY);c.font='bold 13px sans-serif';c.fillStyle='#fff';c.textAlign='left';
+  c.fillText(`你 ${Math.min(100,P.d/LEN*100|0)}%｜對手 ${Math.min(100,O.d/LEN*100|0)}%${P.nit>0?'｜🔥':''}${P.sh>0?'｜🛡️':''}`,8,18)};
+ const tick=t=>{if(over||id!==run)return;const dt=Math.min(.05,(t-(last||t))/1000);last=t;
+  if(go){const pd=P.d,od=O.d;
+   P.slip=Math.max(0,P.slip-dt);P.sh=Math.max(0,P.sh-dt);
+   const tg=P.slip>0?0:(P.nit>0?105:(KY.u?62:0));P.nit=Math.max(0,P.nit-dt);P.v+=(tg-P.v)*Math.min(1,dt*(tg>P.v?2.5:1.3));
+   if(P.slip<=0)P.x=Math.min(.9,Math.max(.1,P.x+(KY.r-KY.l)*dt*.8));
+   P.d+=P.v*dt;P.nt+=dt;if(P.nt>9){P.nt=0;if(P.nc<3){P.nc++;ui()}}
+   O.lt-=dt;if(O.lt<=0){O.lt=rnd(1.2,2.6);O.ln=Math.floor(Math.random()*3)}O.x+=(LX[O.ln]-O.x)*Math.min(1,dt*3);
+   O.slip=Math.max(0,O.slip-dt);O.sh=Math.max(0,O.sh-dt);
+   const ot=O.slip>0?0:60*O.pace*(.9+.2*Math.sin(t/700));O.v+=(ot-O.v)*Math.min(1,dt*2);O.d+=O.v*dt;
+   if(O.item){O.it-=dt;if(O.it<=0){const u=O.item;O.item=null;if(u==='shell')shells.push({d:O.d-6,x:O.x,o:'o'});else if(u==='shield')O.sh=6;else hitP()}}
+   boxes.forEach(b=>{if(!b.pm&&Math.abs(P.d-b.d)<10&&Math.abs(P.x-b.x)<.18&&!P.item){b.pm=1;P.item=pick();beep(900,.1);ui()}
+    if(!b.po&&O.d>=b.d){b.po=1;if(!O.item&&Math.random()<.4){O.item=pick();O.it=rnd(1.5,4)}}});
+   shells.forEach(s=>{if(s.u)return;if(s.o==='p'&&od<s.d&&O.d>=s.d&&Math.abs(O.x-s.x)<.18){s.u=1;hitO()}
+    if(s.o==='o'&&pd<s.d&&P.d>=s.d&&Math.abs(P.x-s.x)<.18){s.u=1;hitP()}});
+   if(P.d>=LEN){over=true;draw();return finish(true)}if(O.d>=LEN){over=true;draw();return finish(false)}}
+  draw();raf=requestAnimationFrame(tick)};
+ cleanup=()=>{over=true;cancelAnimationFrame(raf);removeEventListener('pointerup',rel);removeEventListener('pointercancel',rel);removeEventListener('keydown',kd);removeEventListener('keyup',ku)};
+ raf=requestAnimationFrame(tick);
+ countdown(id).then(ok=>{if(ok)go=true});
+}
+
+/* 🔪 拿刀 */
+async function knife(id){
+ const st=$('stage');st.innerHTML=`<div class="duel"><div class="fi">${av(S.seat,S.photo)}<div class="hp"><i id="h0"></i></div></div><span style="font-size:40px;align-self:center">⚔️</span><div class="fi">${av(S.opp)}<div class="hp"><i id="h1"></i></div></div></div>`;
+ const [a,b]=st.querySelectorAll('.av'),hp=[100,100];let cd=false,guard=false,dead=false,tm;
+ setCtl('<button id="atk" class="red">🔪 砍！</button><button id="def" class="alt">🛡️ 防禦</button>');
+ const upd=()=>[0,1].forEach(i=>{const h=$('h'+i);h.style.width=Math.max(0,hp[i])+'%';h.style.background=hp[i]>50?'var(--win)':hp[i]>25?'#f59e0b':'var(--lose)'});
+ const hurt=(i,d)=>{hp[i]-=d;upd();const el=i?b:a;el.classList.remove('hit');void el.offsetWidth;el.classList.add('hit');beep(i?180:120,.15,'sawtooth');
+  if(hp[i]<=0&&!dead){dead=true;el.classList.add('down');(i?a:b).style.transform='scale(1.15)';setTimeout(()=>{if(id===run)finish(i===1)},800)}};
+ $('atk').onpointerdown=e=>{e.preventDefault();if(cd||dead)return;cd=true;setTimeout(()=>cd=false,420);
+  if(Math.random()<.12){$('say').textContent='揮空了！';beep(700,.08);return}$('say').textContent='';hurt(1,rnd(8,15))};
+ $('def').onpointerdown=e=>{e.preventDefault();if($('def').disabled||dead)return;guard=true;a.classList.add('guard');$('def').disabled=true;beep(600,.1);
+  setTimeout(()=>{guard=false;a.classList.remove('guard')},750);setTimeout(()=>{$('def').disabled=false},1500)};
+ const loop=()=>{tm=setTimeout(()=>{if(dead||id!==run)return;if(Math.random()<.22)$('say').textContent='對手揮空了！';else{$('say').textContent='';hurt(0,rnd(5,9)*(guard?.2:1))}loop()},rnd(850,1500))};
+ cleanup=()=>{clearTimeout(tm);dead=true};
+ if(!await countdown(id))return;loop();
+}
+
+/* 🚦 紅綠燈 */
+async function light(id){
+ const st=$('stage');st.innerHTML=`<div class="light"><i class="r on"></i><i class="g"></i></div><div class="lane">${av(S.seat,S.photo)}</div><div class="lane">${av(S.opp)}</div>`;
+ const [a,b]=st.querySelectorAll('.av'),R=st.querySelector('.r'),G=st.querySelector('.g'),W=()=>st.clientWidth-84;
+ let me=0,op=0,hold=false,green=false,redAt=0,last=0,raf,tm,over=false;const pace=rnd(.7,.95);
+ setCtl('<button id="hold" class="grn">👆 按住前進</button>');
+ const dn=e=>{if(e)e.preventDefault();hold=true},up=()=>hold=false;
+ $('hold').addEventListener('pointerdown',dn);addEventListener('pointerup',up);addEventListener('pointercancel',up);
+ const kd=e=>{if(e.code==='Space'&&!e.repeat)dn(e)},ku=e=>{if(e.code==='Space')up()};addEventListener('keydown',kd);addEventListener('keyup',ku);
+ const lamp=g=>{green=g;G.classList.toggle('on',g);R.classList.toggle('on',!g);if(!g)redAt=performance.now();$('say').textContent=g?'🟢 綠燈！按住衝！':'🔴 紅燈！放手！';beep(g?800:250,.2)};
+ const end=w=>{if(over)return;over=true;finish(w)};
+ const phase=()=>{if(over||id!==run)return;if(!green){lamp(true);tm=setTimeout(phase,rnd(1200,2400))}else{lamp(false);
+   if(Math.random()<.18){op=Math.min(op+4,100);b.style.left=6+op/100*W()+'px';b.style.filter='grayscale(1)';$('say').textContent=`🚨 ${S.opp}號被抓到動了！`;beep(150,.4,'sawtooth');end(true);return}
+   tm=setTimeout(phase,rnd(1000,2000))}};
+ const tick=t=>{if(over||id!==run)return;const dt=Math.min(50,t-(last||t));last=t;
+  if(green){if(hold)me=Math.min(100,me+dt/45);op=Math.min(100,op+dt/45*pace)}
+  else if(hold&&t-redAt>220){a.style.filter='grayscale(1)';$('say').textContent='🚨 紅燈你動了！';beep(150,.4,'sawtooth');end(false);return}
+  a.style.left=6+me/100*W()+'px';b.style.left=6+op/100*W()+'px';
+  if(me>=100)return end(true);if(op>=100)return end(false);raf=requestAnimationFrame(tick)};
+ cleanup=()=>{clearTimeout(tm);cancelAnimationFrame(raf);over=true;removeEventListener('pointerup',up);removeEventListener('pointercancel',up);removeEventListener('keydown',kd);removeEventListener('keyup',ku)};
+ $('say').textContent='🔴 預備…';await sleep(1200);if(id!==run)return;
+ lamp(true);tm=setTimeout(phase,rnd(1200,2400));raf=requestAnimationFrame(tick);
+}
+
+/* 🕵️ 殺手模式 */
+async function mm2(id){
+ const AW=320,EM={M:'🔪',S:'🔫',I:'🙂'},RN={M:'殺手',S:'警長',I:'平民'},HT={M:'殺光所有人！',S:'點人瞄準再開槍，射錯平民你也會死！',I:'躲好、別被殺手碰到！'};
+ const roles=['M','S','I','I','I'].sort(()=>Math.random()-.5);
+ const pl=[S.seat,...S.squad.slice(0,4)].map((n,i)=>({n,me:i===0,r:roles[i],x:rnd(30,290),y:rnd(30,290),a:1,tx:rnd(20,300),ty:rnd(20,300),w:0,cd:0,t:0})),me=pl[0];
+ $('stage').innerHTML='<canvas id="cv" width="320" height="320" style="width:100%;display:block;background:#1f2433;touch-action:none"></canvas>';
+ const cv=$('cv'),c=cv.getContext('2d'),im=new Image();if(S.photo)im.src=S.photo;
+ const MV={l:0,r:0,u:0,d:0};let aim=null,actCd=0,spr=0,sprCd=0,left=60,last=0,raf,go=false,over=false,sec=-1;
+ setCtl(`<button id="ml">◀</button><button id="mu">▲</button><button id="md">▼</button><button id="mr">▶</button><i class="br"></i><button id="ma" class="red">${me.r==='M'?'🔪 殺！':me.r==='S'?'🔫 開槍':'🙂 躲好'}</button><button id="ms" class="alt">💨 衝刺</button>`);
+ if(me.r==='I')$('ma').disabled=true;
+ [['ml','l'],['mr','r'],['mu','u'],['md','d']].forEach(([b,k])=>$(b).addEventListener('pointerdown',e=>{e.preventDefault();MV[k]=1}));
+ const rel=()=>{MV.l=MV.r=MV.u=MV.d=0};addEventListener('pointerup',rel);addEventListener('pointercancel',rel);
+ const near=(p,r,f)=>{let b=null,bd=r;pl.forEach(q=>{if(q!==p&&q.a&&(!f||f(q))){const d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){bd=d;b=q}}});return b};
+ const kill=p=>{p.a=0;beep(160,.25,'sawtooth')};
+ const shoot=(s,t)=>{beep(900,.1,'square');if(t.r==='M')kill(t);else{kill(t);kill(s)}};
+ const act=()=>{if(!go||!me.a||actCd>0)return;
+  if(me.r==='M'){const t=near(me,38);if(t){kill(t);actCd=.6}else $('say').textContent='附近沒有人！'}
+  else if(me.r==='S'){const t=(aim&&aim.a)?aim:near(me,999);if(t){actCd=2;shoot(me,t);aim=null}}};
+ const dash=()=>{if(go&&me.a&&sprCd<=0){spr=1;sprCd=3.5;beep(600,.1)}};
+ $('ma').onpointerdown=e=>{e.preventDefault();act()};$('ms').onpointerdown=e=>{e.preventDefault();dash()};
+ const KM={ArrowLeft:'l',KeyA:'l',ArrowRight:'r',KeyD:'r',ArrowUp:'u',KeyW:'u',ArrowDown:'d',KeyS:'d'};
+ const kd=e=>{const m=KM[e.code];if(m){e.preventDefault();MV[m]=1}if(e.code==='Space'){e.preventDefault();act()}if(e.code==='ShiftLeft')dash()},ku=e=>{const m=KM[e.code];if(m)MV[m]=0};
+ addEventListener('keydown',kd);addEventListener('keyup',ku);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();aim=near({x:(e.clientX-r.left)*AW/r.width,y:(e.clientY-r.top)*AW/r.height},34)});
+ const draw=rv=>{c.fillStyle='#1f2433';c.fillRect(0,0,AW,AW);c.strokeStyle='#ffffff10';c.lineWidth=1;for(let i=0;i<=AW;i+=40){c.beginPath();c.moveTo(i,0);c.lineTo(i,AW);c.moveTo(0,i);c.lineTo(AW,i);c.stroke()}
+  c.textAlign='center';c.textBaseline='middle';
+  pl.forEach(p=>{c.beginPath();c.arc(p.x,p.y,14,0,7);c.fillStyle=!p.a?'#444':p.me?'#7a2fe0':'#64748b';c.fill();
+   if(p.me&&S.photo&&im.complete&&im.naturalWidth){c.save();c.beginPath();c.arc(p.x,p.y,14,0,7);c.clip();c.drawImage(im,p.x-14,p.y-14,28,28);c.restore()}
+   else{c.fillStyle='#fff';c.font='bold 13px sans-serif';c.fillText(p.n,p.x,p.y)}
+   c.lineWidth=2.5;c.strokeStyle=p.me?'#fff':'#000';c.beginPath();c.arc(p.x,p.y,14,0,7);c.stroke();
+   if(aim===p&&p.a){c.strokeStyle='#ffd54a';c.lineWidth=3;c.beginPath();c.arc(p.x,p.y,20,0,7);c.stroke()}
+   c.font='16px serif';if(rv||(p.me&&p.a))c.fillText(EM[p.r],p.x,p.y-24);else if(!p.a)c.fillText('❌',p.x,p.y-24)})};
+ const fin=good=>{if(over)return;over=true;draw(true);const m=pl.find(p=>p.r==='M'),s=pl.find(p=>p.r==='S');finish(me.r==='M'?!good:good);
+  $('say').textContent=`${good?'好人獲勝':'殺手獲勝'}！殺手 ${m.n} 號・警長 ${s.n} 號`};
+ const tick=t=>{if(over||id!==run)return;const rdt=Math.min(.05,(t-(last||t))/1000);last=t;
+  if(go){const dt=rdt*(me.a?1:3);left-=dt;actCd-=dt;sprCd-=dt;spr-=dt;
+   if(me.a){let dx=MV.r-MV.l,dy=MV.d-MV.u;const n=Math.hypot(dx,dy)||1,v=75*(spr>0?1.7:1)*dt;me.x=Math.min(306,Math.max(14,me.x+dx/n*v));me.y=Math.min(306,Math.max(14,me.y+dy/n*v))}
+   pl.forEach(p=>{if(p.me||!p.a)return;let tx=p.tx,ty=p.ty;p.t-=dt;
+    if(p.r==='M'){const g=near(p,999);if(g){tx=g.x;ty=g.y;if(Math.hypot(g.x-p.x,g.y-p.y)<24){p.w+=dt;if(p.w>.9){kill(g);p.w=0}}else p.w=0}}
+    else{if(p.t<=0){p.t=rnd(1,2.5);p.tx=rnd(20,300);p.ty=rnd(20,300)}
+     if(p.r==='S'){p.cd-=dt;const m=pl.find(q=>q.r==='M'&&q.a);if(m&&p.cd<=0&&Math.hypot(m.x-p.x,m.y-p.y)<140){p.cd=1;if(Math.random()<.2)shoot(p,m)}}}
+    if(!p.a)return;const dx=tx-p.x,dy=ty-p.y,d=Math.hypot(dx,dy)||1,v=(p.r==='M'?52:46)*dt;if(d>4){p.x+=dx/d*v;p.y+=dy/d*v}});
+   const sc=Math.ceil(left);if(sc!==sec){sec=sc;$('say').textContent=me.a?`${EM[me.r]} 你是${RN[me.r]}｜剩 ${Math.max(0,sc)} 秒`:'💀 你被淘汰了，快轉觀戰中…'}
+   const mA=pl.some(p=>p.r==='M'&&p.a),oA=pl.some(p=>p.r!=='M'&&p.a);
+   if(!mA)return fin(true);if(!oA)return fin(false);if(left<=0)return fin(true)}
+  draw(false);raf=requestAnimationFrame(tick)};
+ cleanup=()=>{over=true;cancelAnimationFrame(raf);removeEventListener('pointerup',rel);removeEventListener('pointercancel',rel);removeEventListener('keydown',kd);removeEventListener('keyup',ku)};
+ raf=requestAnimationFrame(tick);
+ $('say').textContent=`🎭 你是${RN[me.r]}！${HT[me.r]}`;await sleep(2400);if(id!==run)return;
+ if(!await countdown(id))return;go=true;
+}
+
+if(S.seat&&S.total){S.opp&&S.opp<=S.total&&S.opp!==S.seat?toS5():toS4()}
+</script>
+</body>
+</html>
